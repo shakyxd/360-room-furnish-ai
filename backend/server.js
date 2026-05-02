@@ -10,21 +10,35 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 app.use(cors());
 app.use(express.json());
 
-const PROMPTS = {
-  furnish:
-    "This is a 360-degree equirectangular image of an empty room. Add realistic modern furniture appropriate for the space. Maintain the equirectangular 360-degree projection format and match the existing lighting and style.",
-  unfurnish:
-    "This is a 360-degree equirectangular image of a furnished room. Remove all furniture and leave only the bare walls, floors, and windows. Maintain the equirectangular 360-degree projection format.",
+const STYLE_DESCRIPTORS = {
+  modern:       "modern contemporary",
+  minimalist:   "minimalist with clean lines and neutral tones",
+  scandinavian: "Scandinavian with light woods and cozy textures",
+  industrial:   "industrial with exposed brick, metal, and raw materials",
+  bohemian:     "bohemian with eclectic patterns, plants, and warm colours",
+  luxury:       "high-end luxury with rich materials and elegant decor",
 };
+
+const buildFurnishPrompt = (style) => {
+  const descriptor = STYLE_DESCRIPTORS[style] || "modern contemporary";
+  return `This is a 360-degree equirectangular image of an empty room. Add realistic ${descriptor} furniture appropriate for the space. Do not alter the architecture in any way — keep all walls, floors, ceilings, windows, and doors exactly as they are. Only add furniture and decor. Maintain the equirectangular 360-degree projection format and match the existing lighting.`;
+};
+
+const UNFURNISH_PROMPT =
+  "This is a 360-degree equirectangular image of a furnished room. Remove all furniture and decor, leaving only the bare walls, floors, ceilings, windows, and doors exactly as they are. Do not alter the architecture in any way. Maintain the equirectangular 360-degree projection format.";
 
 app.post("/api/edit", upload.single("image"), async (req, res) => {
   try {
     const { action } = req.body;
     const file = req.file;
 
+    const { style } = req.body;
+
     if (!file) return res.status(400).json({ error: "No image provided" });
-    if (!action || !PROMPTS[action]) return res.status(400).json({ error: "Invalid action. Use 'furnish' or 'unfurnish'" });
+    if (!action || !["furnish", "unfurnish"].includes(action)) return res.status(400).json({ error: "Invalid action" });
     if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
+
+    const prompt = action === "furnish" ? buildFurnishPrompt(style) : UNFURNISH_PROMPT;
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -38,7 +52,7 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
           role: "user",
           parts: [
             { inlineData: { data: imageBase64, mimeType } },
-            { text: PROMPTS[action] },
+            { text: prompt },
           ],
         },
       ],

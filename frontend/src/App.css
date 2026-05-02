@@ -30,7 +30,7 @@ body {
 .app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3.5rem 2rem 5rem;
+  padding: 2rem 2rem 5rem;
 }
 
 /* ── Header ── */
@@ -132,6 +132,48 @@ header h1 {
   font-size: 0.76rem;
   color: var(--muted);
   font-weight: 300;
+}
+
+/* ── Style presets ── */
+.presets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.presets-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+.preset-chip {
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.preset-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.preset-chip.active {
+  border-color: var(--text);
+  background: var(--text);
+  color: #fff;
 }
 
 /* ── Action buttons ── */
@@ -372,9 +414,20 @@ header h1 {
   margin-top: -0.3rem;
 }
 
-/* ── History ── */
-.history {
-  margin-top: 2.5rem;
+/* ── Layout ── */
+.layout {
+  position: relative;
+}
+
+/* ── Sidebar / History ── */
+.sidebar {
+  position: absolute;
+  right: calc(100% + 1.5rem);
+  top: 0;
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .history-label {
@@ -383,23 +436,19 @@ header h1 {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.15rem;
 }
 
-.history-row {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+.history-empty {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 300;
 }
 
 .history-thumb {
-  flex-shrink: 0;
   position: relative;
-  width: 140px;
-  height: 88px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 8px;
   overflow: hidden;
   border: 1.5px solid var(--border);
@@ -412,11 +461,6 @@ header h1 {
 .history-thumb:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow);
-}
-
-.history-thumb.active {
-  border-color: var(--text);
-  box-shadow: 0 0 0 1px var(--text);
 }
 
 .history-thumb img {
@@ -433,7 +477,7 @@ header h1 {
   background: rgba(255,255,255,0.88);
   backdrop-filter: blur(4px);
   color: var(--text);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -532,6 +576,12 @@ header h1 {
 }
 
 /* ── Responsive ── */
+@media (max-width: 1300px) {
+  .sidebar {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
   .viewers {
     grid-template-columns: 1fr;

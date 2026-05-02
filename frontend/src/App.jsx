@@ -4,6 +4,15 @@ import HistoryModal from "./components/HistoryModal";
 
 const MAX_HISTORY = 6;
 
+const STYLES = [
+  { id: "modern",       label: "Modern" },
+  { id: "minimalist",   label: "Minimalist" },
+  { id: "scandinavian", label: "Scandinavian" },
+  { id: "industrial",   label: "Industrial" },
+  { id: "bohemian",     label: "Bohemian" },
+  { id: "luxury",       label: "Luxury" },
+];
+
 export default function App() {
   const [originalUrl, setOriginalUrl] = useState(null);
   const [resultUrl, setResultUrl] = useState(null);
@@ -14,6 +23,7 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [history, setHistory] = useState([]);
   const [modalItem, setModalItem] = useState(null);
+  const [selectedStyle, setSelectedStyle] = useState("modern");
   const fileRef = useRef(null);
   const uploadedFile = useRef(null);
 
@@ -63,6 +73,7 @@ export default function App() {
       const formData = new FormData();
       formData.append("image", uploadedFile.current);
       formData.append("action", action);
+      if (action === "furnish") formData.append("style", selectedStyle);
 
       const base = import.meta.env.VITE_API_URL ?? "";
       const res = await fetch(`${base}/api/edit`, { method: "POST", body: formData });
@@ -74,8 +85,11 @@ export default function App() {
       const url = `data:${mime};base64,${data.image}`;
       setResultUrl(url);
       setResultMime(mime);
+      const styleLabel = action === "furnish"
+        ? STYLES.find((s) => s.id === selectedStyle)?.label
+        : null;
       setHistory((prev) => [
-        { url, mime, action, ts: Date.now() },
+        { url, mime, action, style: styleLabel, ts: Date.now() },
         ...prev,
       ].slice(0, MAX_HISTORY));
     } catch (err) {
@@ -102,7 +116,28 @@ export default function App() {
         <p className="header-sub">Upload an equirectangular image and furnish or unfurnish it in seconds</p>
       </header>
 
-      <main>
+      <div className="layout">
+        <aside className="sidebar">
+          <p className="history-label">History</p>
+          {history.length === 0 ? (
+            <p className="history-empty">No generations yet</p>
+          ) : (
+            history.map((item) => (
+              <button
+                key={item.ts}
+                className="history-thumb"
+                onClick={() => setModalItem(item)}
+              >
+                <img src={item.url} alt={item.action} />
+                <span className="history-tag">
+                  {item.action === "furnish" ? (item.style ?? "Furnished") : "Unfurnished"}
+                </span>
+              </button>
+            ))
+          )}
+        </aside>
+
+        <main>
         <div className="card upload-card">
           <div
             className={`dropzone${dragging ? " dragging" : ""}${originalUrl ? " has-image" : ""}`}
@@ -148,6 +183,19 @@ export default function App() {
             Paste image
           </button>
 
+          <div className="presets">
+            <span className="presets-label">Style</span>
+            {STYLES.map((s) => (
+              <button
+                key={s.id}
+                className={`preset-chip${selectedStyle === s.id ? " active" : ""}`}
+                onClick={() => setSelectedStyle(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
           <div className="actions">
             <button className="btn btn-furnish" disabled={!originalUrl || loading} onClick={() => runEdit("furnish")}>
               Furnish Room
@@ -175,25 +223,8 @@ export default function App() {
           </div>
         )}
 
-        {history.length > 0 && (
-          <section className="history">
-            <p className="history-label">History</p>
-            <div className="history-row">
-              {history.map((item) => (
-                <button
-                  key={item.ts}
-                  className="history-thumb"
-                  onClick={() => setModalItem(item)}
-                  title={item.action === "furnish" ? "Furnished" : "Unfurnished"}
-                >
-                  <img src={item.url} alt={item.action} />
-                  <span className="history-tag">{item.action === "furnish" ? "Furnished" : "Unfurnished"}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-      </main>
+        </main>
+      </div>
 
       {modalItem && (
         <HistoryModal item={modalItem} onClose={() => setModalItem(null)} />
