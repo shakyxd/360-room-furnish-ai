@@ -2,6 +2,7 @@ services:
   - type: web
     name: 360-furnish-backend
     env: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
@@ -14,6 +15,7 @@ services:
   - type: web
     name: 360-furnish-frontend
     env: static
+    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
