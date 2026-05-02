@@ -511,18 +511,18 @@ header h1 {
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 900px;
+  max-width: 1080px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 1.25rem;
+  gap: 1rem;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border);
 }
 
 .modal-title {
@@ -557,7 +557,7 @@ header h1 {
 }
 
 .modal-viewer {
-  height: 500px;
+  height: 580px;
 }
 
 .modal-viewer .viewer-wrapper {
@@ -569,8 +569,7 @@ header h1 {
 }
 
 .modal-viewer .pannellum-outer {
-  border-radius: 0;
-  border: none;
+  border-radius: 8px;
   box-shadow: none;
   height: 100%;
 }
