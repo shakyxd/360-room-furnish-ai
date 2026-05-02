@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: spatial
+    name: furnish360ai
     env: node
     plan: free
     rootDir: backend
@@ -13,7 +13,7 @@ services:
         value: production
 
   - type: web
-    name: spatial-frontend
+    name: furnish360ai-ui
     env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
