@@ -2,15 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 app.use(cors());
 app.use(express.json());
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const PROMPTS = {
   furnish:
@@ -28,27 +26,27 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
     if (!action || !PROMPTS[action]) return res.status(400).json({ error: "Invalid action. Use 'furnish' or 'unfurnish'" });
     if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-image-preview",
-      generationConfig: {
-        responseModalities: ["Text", "Image"],
-      },
-    });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const imageBase64 = file.buffer.toString("base64");
     const mimeType = file.mimetype;
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          data: imageBase64,
-          mimeType,
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-image-preview",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { data: imageBase64, mimeType } },
+            { text: PROMPTS[action] },
+          ],
         },
+      ],
+      config: {
+        responseModalities: ["TEXT", "IMAGE"],
       },
-      { text: PROMPTS[action] },
-    ]);
+    });
 
-    const response = result.response;
     const parts = response.candidates?.[0]?.content?.parts ?? [];
 
     let generatedBase64 = null;
