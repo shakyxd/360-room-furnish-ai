@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: 360-furnish-backend
+    name: spatial
     env: node
     plan: free
     rootDir: backend
@@ -13,7 +13,7 @@ services:
         value: production
 
   - type: web
-    name: 360-furnish-frontend
+    name: spatial-frontend
     env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
