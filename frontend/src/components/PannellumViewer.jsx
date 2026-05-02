@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export default function PannellumViewer({ imageUrl, label, loading = false }) {
+export default function PannellumViewer({ imageUrl, label, loading = false, elapsed = 0 }) {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
 
@@ -12,17 +12,21 @@ export default function PannellumViewer({ imageUrl, label, loading = false }) {
       viewerRef.current = null;
     }
 
-    viewerRef.current = window.pannellum.viewer(containerRef.current, {
-      type: "equirectangular",
-      panorama: imageUrl,
-      autoLoad: true,
-      showControls: true,
-      compass: false,
-      showFullscreenCtrl: true,
-      mouseZoom: true,
-    });
+    const timerId = setTimeout(() => {
+      if (!containerRef.current) return;
+      viewerRef.current = window.pannellum.viewer(containerRef.current, {
+        type: "equirectangular",
+        panorama: imageUrl,
+        autoLoad: true,
+        showControls: true,
+        compass: false,
+        showFullscreenCtrl: true,
+        mouseZoom: true,
+      });
+    }, 50);
 
     return () => {
+      clearTimeout(timerId);
       if (viewerRef.current) {
         viewerRef.current.destroy();
         viewerRef.current = null;
@@ -50,6 +54,7 @@ export default function PannellumViewer({ imageUrl, label, loading = false }) {
             <div className="overlay-center">
               <div className="overlay-spinner" />
               <span>Generating…</span>
+              <span className="overlay-elapsed">{elapsed}s</span>
             </div>
           </div>
         )}
