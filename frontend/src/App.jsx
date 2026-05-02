@@ -4,6 +4,12 @@ import HistoryModal from "./components/HistoryModal";
 
 const MAX_HISTORY = 6;
 
+const RESOLUTIONS = [
+  { id: "1k", label: "1K", hint: "Default" },
+  { id: "2k", label: "2K", hint: "Sharper" },
+  { id: "4k", label: "4K", hint: "Best" },
+];
+
 const STYLES = [
   { id: "modern",       label: "Modern" },
   { id: "minimalist",   label: "Minimalist" },
@@ -24,8 +30,10 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [modalItem, setModalItem] = useState(null);
   const [selectedStyle, setSelectedStyle] = useState("modern");
+  const [selectedRes, setSelectedRes] = useState("1k");
   const fileRef = useRef(null);
   const uploadedFile = useRef(null);
+  const mainSyncRef = useRef({ pitch: 0, yaw: 0, hfov: 100, source: null });
 
   // Elapsed timer
   useEffect(() => {
@@ -74,6 +82,7 @@ export default function App() {
       formData.append("image", uploadedFile.current);
       formData.append("action", action);
       if (action === "furnish") formData.append("style", selectedStyle);
+      formData.append("resolution", selectedRes);
 
       const base = import.meta.env.VITE_API_URL ?? "";
       const res = await fetch(`${base}/api/edit`, { method: "POST", body: formData });
@@ -89,7 +98,7 @@ export default function App() {
         ? STYLES.find((s) => s.id === selectedStyle)?.label
         : null;
       setHistory((prev) => [
-        { url, mime, action, style: styleLabel, ts: Date.now() },
+        { url, mime, action, style: styleLabel, originalUrl, ts: Date.now() },
         ...prev,
       ].slice(0, MAX_HISTORY));
     } catch (err) {
@@ -196,6 +205,20 @@ export default function App() {
             ))}
           </div>
 
+          <div className="presets">
+            <span className="presets-label">Resolution</span>
+            {RESOLUTIONS.map((r) => (
+              <button
+                key={r.id}
+                className={`preset-chip${selectedRes === r.id ? " active" : ""}`}
+                onClick={() => setSelectedRes(r.id)}
+                title={r.hint}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
           <div className="actions">
             <button className="btn btn-furnish" disabled={!originalUrl || loading} onClick={() => runEdit("furnish")}>
               Furnish Room
@@ -210,8 +233,8 @@ export default function App() {
 
         {originalUrl && (
           <section className="viewers">
-            <PannellumViewer imageUrl={originalUrl} label="Original" />
-            <PannellumViewer imageUrl={resultUrl} label="AI Result" loading={loading} elapsed={elapsed} />
+            <PannellumViewer imageUrl={originalUrl} label="Original" syncRef={mainSyncRef} syncId="original" />
+            <PannellumViewer imageUrl={resultUrl} label="AI Result" loading={loading} elapsed={elapsed} syncRef={mainSyncRef} syncId="result" />
           </section>
         )}
 

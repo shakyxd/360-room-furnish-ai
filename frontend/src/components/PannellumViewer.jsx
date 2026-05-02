@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export default function PannellumViewer({ imageUrl, label, loading = false, elapsed = 0 }) {
+export default function PannellumViewer({ imageUrl, label, loading = false, elapsed = 0, syncRef, syncId }) {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
 
@@ -23,16 +23,57 @@ export default function PannellumViewer({ imageUrl, label, loading = false, elap
         showFullscreenCtrl: true,
         mouseZoom: true,
       });
+
+      // Sync setup
+      if (syncRef && syncId && viewerRef.current) {
+        const el = containerRef.current;
+        let dragging = false;
+        let rafId;
+
+        const onDown = () => { dragging = true; };
+        const onUp = () => { dragging = false; };
+
+        const loop = () => {
+          const v = viewerRef.current;
+          if (!v) return;
+          if (dragging) {
+            syncRef.current = { pitch: v.getPitch(), yaw: v.getYaw(), hfov: v.getHfov(), source: syncId };
+          } else if (syncRef.current?.source !== syncId) {
+            const { pitch, yaw, hfov } = syncRef.current ?? {};
+            if (pitch != null) {
+              v.setPitch(pitch, false);
+              v.setYaw(yaw, false);
+              v.setHfov(hfov, false);
+            }
+          }
+          rafId = requestAnimationFrame(loop);
+        };
+
+        el.addEventListener("mousedown", onDown);
+        el.addEventListener("touchstart", onDown, { passive: true });
+        window.addEventListener("mouseup", onUp);
+        window.addEventListener("touchend", onUp);
+        rafId = requestAnimationFrame(loop);
+
+        viewerRef.current._syncCleanup = () => {
+          cancelAnimationFrame(rafId);
+          el.removeEventListener("mousedown", onDown);
+          el.removeEventListener("touchstart", onDown);
+          window.removeEventListener("mouseup", onUp);
+          window.removeEventListener("touchend", onUp);
+        };
+      }
     }, 50);
 
     return () => {
       clearTimeout(timerId);
       if (viewerRef.current) {
+        viewerRef.current._syncCleanup?.();
         viewerRef.current.destroy();
         viewerRef.current = null;
       }
     };
-  }, [imageUrl]);
+  }, [imageUrl, syncRef, syncId]);
 
   return (
     <div className="viewer-wrapper">

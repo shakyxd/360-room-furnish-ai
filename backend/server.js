@@ -32,7 +32,7 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
     const { action } = req.body;
     const file = req.file;
 
-    const { style } = req.body;
+    const { style, resolution } = req.body;
 
     if (!file) return res.status(400).json({ error: "No image provided" });
     if (!action || !["furnish", "unfurnish"].includes(action)) return res.status(400).json({ error: "Invalid action" });
@@ -58,6 +58,7 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
       ],
       config: {
         responseModalities: ["TEXT", "IMAGE"],
+        outputSize: ["2k", "4k"].includes(resolution) ? resolution : "1k",
       },
     });
 
