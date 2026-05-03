@@ -40,12 +40,15 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
 
     const prompt = action === "furnish" ? buildFurnishPrompt(style) : UNFURNISH_PROMPT;
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: { timeout: 180000 },
+    });
 
     const imageBase64 = file.buffer.toString("base64");
     const mimeType = file.mimetype;
 
-    const response = await ai.models.generateContent({
+    const request = {
       model: "gemini-3.1-flash-image-preview",
       contents: [
         {
@@ -60,7 +63,22 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
         responseModalities: ["TEXT", "IMAGE"],
         outputSize: ["2k", "4k"].includes(resolution) ? resolution : "1k",
       },
-    });
+    };
+
+    let response;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        response = await ai.models.generateContent(request);
+        break;
+      } catch (err) {
+        const retryable = err.message?.includes("503") || err.message?.includes("fetch failed");
+        if (retryable && attempt < 3) {
+          await new Promise((r) => setTimeout(r, attempt * 3000));
+        } else {
+          throw err;
+        }
+      }
+    }
 
     const parts = response.candidates?.[0]?.content?.parts ?? [];
 
