@@ -120,7 +120,11 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <p className="header-eyebrow">Powered by Nano Banana 2</p>
+        <img
+          src="https://onthespot.ai/wp-content/uploads/2024/05/onTheSpot_XXL-3.png"
+          alt="On The Spot"
+          className="header-logo"
+        />
         <h1>360° Room Furnish AI</h1>
         <p className="header-sub">Upload an equirectangular image and furnish or unfurnish it in seconds</p>
       </header>

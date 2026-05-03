@@ -39,6 +39,15 @@ header {
   margin-bottom: 3rem;
 }
 
+.header-logo {
+  height: 36px;
+  width: auto;
+  margin-bottom: 1.25rem;
+  background: #1a1916;
+  border-radius: 8px;
+  padding: 8px 20px;
+}
+
 .header-eyebrow {
   font-size: 0.72rem;
   font-weight: 500;
