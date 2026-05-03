@@ -40,10 +40,7 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
 
     const prompt = action === "furnish" ? buildFurnishPrompt(style) : UNFURNISH_PROMPT;
 
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: { timeout: 180000 },
-    });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const imageBase64 = file.buffer.toString("base64");
     const mimeType = file.mimetype;
@@ -71,7 +68,7 @@ app.post("/api/edit", upload.single("image"), async (req, res) => {
         response = await ai.models.generateContent(request);
         break;
       } catch (err) {
-        const retryable = err.message?.includes("503") || err.message?.includes("fetch failed");
+        const retryable = err.message?.includes("503") || err.message?.includes("fetch failed") || err.message?.includes("AbortError");
         if (retryable && attempt < 3) {
           await new Promise((r) => setTimeout(r, attempt * 3000));
         } else {
